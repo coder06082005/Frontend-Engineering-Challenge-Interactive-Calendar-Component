@@ -1,0 +1,588 @@
+/* Wall calendar: compact portrait, wall mount, seasonal accent, range + holidays */
+:root {
+  --cal-text: #333333;
+  --cal-muted: #cccccc;
+  --cal-white: #ffffff;
+  --cal-blue: #0088cc;
+  --cal-range-end: #0088cc;
+  --cal-range: rgba(0, 136, 204, 0.2);
+  --cal-holiday: #c45c26;
+  --cal-card-width: min(400px, calc(100vw - 24px));
+  --cal-rule-step: 20px;
+}
+
+.calendar-page[data-season='winter'] {
+  --cal-blue: #0a7ead;
+  --cal-range-end: #0a7ead;
+  --cal-range: rgba(10, 126, 173, 0.2);
+}
+
+.calendar-page[data-season='spring'] {
+  --cal-blue: #0091c0;
+  --cal-range-end: #0091c0;
+  --cal-range: rgba(0, 145, 192, 0.2);
+}
+
+.calendar-page[data-season='summer'] {
+  --cal-blue: #0088cc;
+  --cal-range-end: #0088cc;
+  --cal-range: rgba(0, 136, 204, 0.2);
+}
+
+.calendar-page[data-season='autumn'] {
+  --cal-blue: #0d7a8c;
+  --cal-range-end: #0d7a8c;
+  --cal-range: rgba(13, 122, 140, 0.22);
+}
+
+.app-shell {
+  min-height: 100dvh;
+}
+
+/* ——— Wall + nail ——— */
+.wall-scene {
+  min-height: 100dvh;
+  padding: 24px 12px 40px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background:
+    radial-gradient(ellipse 95% 55% at 50% 0%, rgba(255, 255, 255, 0.2), transparent 52%),
+    linear-gradient(165deg, #d2d2d2 0%, #c4c4c4 42%, #cecece 100%);
+}
+
+.wall-mount {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+}
+
+/* Soft wall stain under spiral / wire (light from top-right → shadow falls down-left) */
+.wall-mount::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 22px;
+  width: min(240px, 58vw);
+  height: 32px;
+  transform: translateX(calc(-50% - 8px));
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 72% 65% at 58% 42%,
+    rgba(0, 0, 0, 0.11) 0%,
+    rgba(0, 0, 0, 0.04) 45%,
+    transparent 72%
+  );
+  filter: blur(7px);
+  opacity: 0.95;
+}
+
+/* Extra-soft wall read under the lower sheet (down-left of page) */
+.wall-mount::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: clamp(140px, 28vw, 200px);
+  width: min(calc(var(--cal-card-width) + 72px), 96vw);
+  height: min(420px, 58vh);
+  transform: translateX(calc(-50% - 18px));
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 60% 48% at 48% 36%,
+    rgba(0, 0, 0, 0.065) 0%,
+    rgba(0, 0, 0, 0.02) 42%,
+    transparent 70%
+  );
+  filter: blur(26px);
+}
+
+.wall-nail {
+  position: relative;
+  z-index: 2;
+  width: 11px;
+  height: 11px;
+  margin-bottom: 1px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 32%, #f2f2f2, #9a9a9a 38%, #4a4a4a 72%, #2c2c2c);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.45);
+}
+
+/* Tiny contact shadow where tack meets wall (down-left of light source) */
+.wall-nail::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 55%;
+  width: 22px;
+  height: 10px;
+  transform: translate(calc(-50% - 3px), 2px);
+  background: radial-gradient(ellipse 90% 100% at 50% 0%, rgba(0, 0, 0, 0.28), transparent 72%);
+  filter: blur(4px);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.wall-nail::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 2px;
+  height: 6px;
+  margin-left: -1px;
+  background: linear-gradient(180deg, #5a5a5a, #3a3a3a);
+  border-radius: 0 0 1px 1px;
+  opacity: 0.55;
+}
+
+.wall-calendar-rot {
+  position: relative;
+  z-index: 1;
+  transform-origin: top center;
+  transform: rotate(-0.6deg);
+}
+
+/* ——— Card + page-turn ——— */
+.calendar-page {
+  width: var(--cal-card-width);
+  margin: 0 auto;
+  background: var(--cal-white);
+  border-radius: 1px;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+  perspective: 1100px;
+  /* Reference: light top-right → shadow spreads to bottom-left, soft with wide blur */
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.42),
+    /* umbra near left & bottom edges */
+    -5px 7px 10px -3px rgba(0, 0, 0, 0.14),
+    -10px 18px 22px -6px rgba(0, 0, 0, 0.12),
+    -16px 32px 38px -8px rgba(0, 0, 0, 0.1),
+    -22px 48px 52px -10px rgba(0, 0, 0, 0.075),
+    /* large ambient penumbra */
+    -28px 64px 70px -12px rgba(0, 0, 0, 0.05),
+    -34px 88px 100px -16px rgba(0, 0, 0, 0.035);
+}
+
+.calendar-page__inner {
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transform-origin: top center;
+  border-radius: 1px;
+}
+
+.calendar-page__inner--page-turn {
+  animation: calPageTurn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes calPageTurn {
+  0% {
+    transform: rotateX(0deg);
+  }
+  42% {
+    transform: rotateX(-7deg) scale(0.994);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+.spiral-binding {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -2px;
+}
+
+.spiral-binding__svg {
+  width: 100%;
+  height: 20px;
+  display: block;
+}
+
+.spiral-binding__hook {
+  width: 38px;
+  height: 8px;
+  margin-top: -1px;
+  border: 2px solid #2a2a2a;
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  background: linear-gradient(180deg, #4d4d4d 0%, #1f1f1f 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+  opacity: 0.95;
+}
+
+/* ——— Hero ——— */
+.calendar-hero {
+  position: relative;
+}
+
+.calendar-hero__image-wrap {
+  position: relative;
+  height: 228px;
+  overflow: hidden;
+  background: #a8a8a8;
+}
+
+.calendar-hero__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 32%;
+  display: block;
+  transition: object-position 0.45s ease;
+}
+
+.calendar-hero__blue {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 52%;
+  background: var(--cal-blue);
+  clip-path: polygon(0 40%, 50% 22%, 100% 14%, 100% 100%, 0 100%);
+  pointer-events: none;
+  transition: background 0.4s ease;
+}
+
+.calendar-hero__title-block {
+  position: absolute;
+  right: 12px;
+  bottom: 14px;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.calendar-hero__year {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.calendar-hero__month {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  color: var(--cal-white);
+  text-transform: uppercase;
+}
+
+.calendar-hero__nav {
+  pointer-events: auto;
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.calendar-hero__nav-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--cal-white);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+}
+
+.calendar-hero__nav-btn:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.calendar-hero__nav-btn:active {
+  transform: scale(0.96);
+}
+
+/* ——— Bottom ——— */
+.calendar-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 12px;
+  padding: 12px 12px 14px;
+  align-items: start;
+}
+
+.notes-panel__title {
+  margin: 0 0 8px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--cal-text);
+}
+
+.notes-panel__lined {
+  position: relative;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent calc(var(--cal-rule-step) - 1px),
+    var(--cal-muted) calc(var(--cal-rule-step) - 1px),
+    var(--cal-muted) var(--cal-rule-step)
+  );
+  background-origin: content-box;
+  padding-top: 4px;
+}
+
+.notes-panel__lined--month {
+  min-height: calc(8 * var(--cal-rule-step));
+}
+
+.notes-panel__lined--range {
+  min-height: calc(4 * var(--cal-rule-step));
+  margin-top: 4px;
+}
+
+.notes-panel__textarea {
+  width: 100%;
+  border: none;
+  resize: vertical;
+  font: inherit;
+  font-size: 0.72rem;
+  line-height: var(--cal-rule-step);
+  color: var(--cal-text);
+  background: transparent;
+  padding: 0 2px;
+  min-height: calc(8 * var(--cal-rule-step));
+  outline: none;
+}
+
+.notes-panel__textarea::placeholder {
+  color: #b0b0b0;
+}
+
+.notes-panel__textarea--sm {
+  min-height: calc(3.5 * var(--cal-rule-step));
+  font-size: 0.68rem;
+}
+
+.notes-panel__selection {
+  margin-top: 12px;
+}
+
+.notes-panel__selection-label {
+  margin: 0 0 4px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--cal-blue);
+  letter-spacing: 0.02em;
+  transition: color 0.3s ease;
+}
+
+/* Grid */
+.calendar-grid-wrap {
+  min-width: 0;
+}
+
+.weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 6px;
+}
+
+.weekday-cell {
+  text-align: center;
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--cal-text);
+  padding: 3px 0;
+}
+
+.weekday-cell--weekend {
+  color: var(--cal-blue);
+  transition: color 0.3s ease;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.calendar-cell {
+  position: relative;
+  aspect-ratio: 1;
+  max-height: 34px;
+  border: none;
+  margin: 0;
+  padding: 2px 0 3px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--cal-text);
+  transition:
+    background 0.12s,
+    color 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.calendar-cell:disabled {
+  cursor: default;
+  color: var(--cal-muted);
+}
+
+.calendar-cell--weekend:not(:disabled) {
+  color: var(--cal-blue);
+}
+
+.calendar-cell--muted {
+  color: var(--cal-muted);
+}
+
+.calendar-cell--holiday:not(:disabled) .calendar-cell__num {
+  text-decoration: underline;
+  text-decoration-color: rgba(196, 92, 38, 0.45);
+  text-underline-offset: 2px;
+}
+
+.calendar-cell--in-range:not(:disabled) {
+  background: var(--cal-range);
+}
+
+.calendar-cell--range-endpoint:not(:disabled) {
+  background: var(--cal-range-end);
+  color: var(--cal-white);
+  font-weight: 700;
+}
+
+.calendar-cell--range-endpoint:not(:disabled) .calendar-cell__holiday-dot {
+  background: var(--cal-white);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.calendar-cell:not(:disabled):hover {
+  background: rgba(0, 136, 204, 0.12);
+}
+
+.calendar-cell--range-endpoint:not(:disabled):hover {
+  filter: brightness(1.05);
+}
+
+.calendar-cell__num {
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.calendar-cell__holiday-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--cal-holiday);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.calendar-grid__hint {
+  margin: 8px 0 0;
+  font-size: 0.55rem;
+  line-height: 1.35;
+  color: #888;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.calendar-grid__hint-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cal-holiday);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ——— Responsive ——— */
+@media (max-width: 720px) {
+  .wall-calendar-rot {
+    transform: none;
+  }
+
+  .calendar-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-grid-wrap {
+    order: -1;
+  }
+
+  .notes-panel {
+    order: 1;
+  }
+
+  .calendar-hero__image-wrap {
+    height: 200px;
+  }
+
+  .calendar-cell {
+    max-height: none;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 420px) {
+  .weekday-cell {
+    font-size: 0.45rem;
+    padding: 2px 0;
+  }
+
+  .calendar-hero__month {
+    font-size: 1.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calendar-page__inner--page-turn {
+    animation: none;
+  }
+
+  .wall-calendar-rot {
+    transform: none;
+  }
+
+  .calendar-hero__image {
+    transition: none;
+  }
+
+  .calendar-hero__blue,
+  .weekday-cell--weekend,
+  .notes-panel__selection-label {
+    transition: none;
+  }
+}
