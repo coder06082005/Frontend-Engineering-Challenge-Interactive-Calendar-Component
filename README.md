@@ -2,7 +2,7 @@
 
 Frontend exercise: a wall-calendar style UI with a hero image, lined notes area, Monday-first grid, and interactive date-range selection. Layout, colors (#0088cc blue, #333 text, #cccccc muted lines), and typography follow the supplied reference PDF.
 
-##Live Link
+## Live Link
 https://frontend-engineering-challenge-inte-chi.vercel.app/
 
 ## Run locally
